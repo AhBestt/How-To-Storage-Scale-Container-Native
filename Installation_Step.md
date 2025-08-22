@@ -84,3 +84,15 @@ ___
        `oc apply -f mco_x86_64.yaml` <br>
   - Check Status for mcp and wait until the update completes <br>
        `oc get mcp` <br>
+- Verify Worker Node and Label <br>
+  - Verify Worker Node (Ensure the worker label is applied only to Worker Nodes) <br>
+  `oc get node -l node-role.kubernetes.io/worker` <br>
+  - label Worker Node <br>
+  `oc label nodes -l node-role.kubernetes.io/worker= scale.spectrum.ibm.com/daemon-selector=` <br>
+- Validate kernel package and secure boot are installed <br>
+  - Validate kernel package is installed <br>
+  `oc get nodes -lscale.spectrum.ibm.com/daemon-selector= -ojsonpath="{range .items[*]}{.metadata.name}{'\n'}" | xargs -I{} oc debug node/{} -T -- chroot /host sh -c "rpm -q kernel-devel"` <br>
+  - Validate secure boot is installed <br>
+  `oc get nodes -lscale.spectrum.ibm.com/daemon-selector= -ojsonpath="{range .items[*]}{.metadata.name}{'\n'}" | xargs -I{} oc debug node/{} -T -- chroot /host sh -c "mokutil --sb-state"` <br>
+  
+ 
