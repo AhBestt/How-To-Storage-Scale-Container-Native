@@ -1,0 +1,25 @@
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: vlan-bond2
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: <FQDN_nodename>
+  desiredState:
+    interfaces:
+    - name: bond2.<vlanID> # Modify vlanID
+      description: vlan using bond2
+      type: vlan
+      state: up
+      mtu: 9000
+      vlan: 
+        base-iface: bond2
+        id: <vlanID> # Modify vlanID
+      ipv4:
+        address:
+        - ip: <IP_Node>
+          prefix-length: <PREFIX_LENGTH> # e.g., 24 for 255.255.255.0
+        dhcp: false
+        enable: true
+      ipv6:
+        enabled: false
