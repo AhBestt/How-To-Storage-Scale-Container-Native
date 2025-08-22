@@ -70,5 +70,17 @@ ___
    - To show OpenShift Console run: <br>
    `oc whoami --show-console` <br>
    - Download Kubernetes NMState Operator and create NMState as default <br>
-   - Setting IP as needed [bond2.yaml](https://github.com/AhBestt/How-To-Storage-Scale-Container-Native/blob/main/infra_yaml/bond2.yaml) <br>
-   
+   - Setting IP as needed for Worker Node by [bond2.yaml](https://github.com/AhBestt/How-To-Storage-Scale-Container-Native/blob/main/infra_yaml/bond2.yaml) and [vlan.yaml](https://github.com/AhBestt/How-To-Storage-Scale-Container-Native/tree/main/infra_yaml)<br>
+   - After configuration run the yaml file <br>
+   `oc apply -f bond2.yaml` <br>
+   `oc apply -f vlan.yaml` <br>
+___
+7. Install Storage Scale Container Native <br>
+   -  Unlabel worker on Infra Node <br>
+    `oc label node/<FQDN_Infra_Node1_Name> node-role.kubernetes.io/worker-` <br>
+    `oc label node/<FQDN_Infra_Node2_Name> node-role.kubernetes.io/worker-` <br>
+   - Download the Worker Node Configuration YAML from [IBM Docs](https://www.ibm.com/docs/en/scalecontainernative/5.2.3?topic=premise-worker-node-configuration) matching the deployed version (e.g., 5.2.3) and the machine architecture (e.g., x86_64) <br>
+     -  Apply yaml file <br>
+       `oc apply -f mco_x86_64.yaml` <br>
+     - Check Status for mcp and wait until the update completes <br>
+       `oc get mcp` <br>
