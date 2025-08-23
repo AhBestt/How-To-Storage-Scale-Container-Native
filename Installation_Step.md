@@ -165,3 +165,60 @@ ___
   ```
   - Create Configmap follow [IBM Docs](https://www.ibm.com/docs/en/scalecontainernative/5.2.3?topic=remotecluster-configuring-certificate-authority-ca-certificates) <br>
   > If CSI requested, please create configmap on namespaces `ibm-spectrum-scale-csi` too <br>
+  - Download a copy of the sample `remotecluster.yaml` <br>
+  ```bash
+  curl -fs https://raw.githubusercontent.com/IBM/ibm-spectrum-scale-container-native/v5.2.3.x/generated/scale/cr/remotecluster/remotecluster.yaml > remotecluster.yaml || echo "Failed to download RemoteCluster sample CR"
+  ```
+  - Configure remote cluster and apply <br>
+  ```bash
+  oc apply -f remotecluster.yaml
+  ```
+  - Validate status of remotecluster <br>
+  ```bash
+  oc get remotecluster -n ibm-spectrum-scale
+  ```
+    - A sample output is shown <br>
+    ```bash
+    NAME                   READY   AGE
+    remotecluster-sample   True    25h
+    ```
+  - Download a copy of the sample `filesystem.remote.yaml` <br>
+  ```bash
+  curl -fs https://raw.githubusercontent.com/IBM/ibm-spectrum-scale-container-native/v5.2.3.x/generated/scale/cr/filesystem/filesystem.remote.yaml > filesystem.remote.yaml || echo "Failed to download Filesystem sample CR"
+  ```
+  - Configure and apply filesystem <br>
+  ```bash
+  oc apply -f filesystem.remote.yaml
+  ```
+  - Validate status <br>
+  ```bash
+  oc get fs -n ibm-spectrum-scale
+  ```
+    - A sample output is shown <br>
+    ```bash
+    NAME            ESTABLISHED   AGE
+    remote-sample   True          25h
+    ```
+___
+8.Test Creating Pod <br>
+  - Check Storage Class <br>
+  ```bash
+  oc get sc
+  ```
+  -  Test create pvc, download a [pvc.yaml](https://github.com/AhBestt/How-To-Storage-Scale-Container-Native/blob/main/infra_yaml/pvc.yaml) and apply the yaml file <br>
+  ```bash
+  oc apply -f pvc.ymal
+  ```
+  - Check PVC status is bonding <br>
+  ```bash
+  oc get pvc
+  ```
+  - Test create pod, download a [pod.yaml](https://github.com/AhBestt/How-To-Storage-Scale-Container-Native/blob/main/infra_yaml/pod.yaml) and apply the yaml file <br>
+  ```bash
+  oc apply -f pod.yaml
+  ```
+  - Validate Pod is running <br>
+  ```bash
+  oc get pod
+  ```
+  > Expected result: Pod is running
