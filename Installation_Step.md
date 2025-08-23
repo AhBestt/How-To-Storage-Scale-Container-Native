@@ -89,10 +89,79 @@ ___
   `oc get node -l node-role.kubernetes.io/worker` <br>
   - label Worker Node <br>
   `oc label nodes -l node-role.kubernetes.io/worker= scale.spectrum.ibm.com/daemon-selector=` <br>
-- Validate kernel package and secure boot are installed <br>
+- Validate kernel package and secure boot <br>
   - Validate kernel package is installed <br>
   `oc get nodes -lscale.spectrum.ibm.com/daemon-selector= -ojsonpath="{range .items[*]}{.metadata.name}{'\n'}" | xargs -I{} oc debug node/{} -T -- chroot /host sh -c "rpm -q kernel-devel"` <br>
-  - Validate secure boot is installed <br>
+  - Validate secure boot is disabled <br>
   `oc get nodes -lscale.spectrum.ibm.com/daemon-selector= -ojsonpath="{range .items[*]}{.metadata.name}{'\n'}" | xargs -I{} oc debug node/{} -T -- chroot /host sh -c "mokutil --sb-state"` <br>
+- Install the operator into the target environment <br>
+   `oc apply -f https://raw.githubusercontent.com/IBM/ibm-spectrum-scale-container-native/v5.2.3.x/generated/scale/install.yaml` <br>
+  - Validate Namespace <br>
+  `oc get namespaces | grep ibm-spectrum-scale` <br>
+    
+    >Expected result: The following namespaces appear and in Ready status <br>
+    > ibm-spectrum-scale <br>
+    > ibm-spectrum-scale-csi <br>
+    > ibm-spectrum-scale-dns <br>
+    > ibm-spectrum-scale-operator <br>
   
- 
+  - Validate pod <br>
+    `oc get pods -n ibm-spectrum-scale-operator` <br>
+    
+    >Expected result: The following pod appear and in Ready status <br>
+    >ibm-spectrum-scale-controller-manager-<generated_number> <br>
+    
+    `oc get pods -n ibm-spectrum-scale-csi` <br>
+
+    > Expected result: The following pod appear and in Ready status <br>
+    > ibm-spectrum-scale-csi-operator-<generated_number> <br>
+- Export Key and Create name space pull secret <br>
+  -  Export Key Entitlement <br>
+    ```bash
+     export ENTITLEMENT_KEY=<REPLACE WITH ICR ENTITLEMENT KEY>
+    ```
+  - Create a docker-registry secret for each namespace <br>
+    ```bash
+     for namespace in ibm-spectrum-scale ibm-spectrum-scale-operator ibm-spectrum-scale-dns ibm-spectrum-scale-csi; do
+     kubectl create secret docker-registry ibm-entitlement-key -n ${namespace} \
+     --docker-server=cp.icr.io \
+     --docker-username=cp \
+     --docker-password=${ENTITLEMENT_KEY}
+     done
+    ```
+  - Unset the export <br>
+    ```bash
+    unset ENTITLEMENT_KEY
+    ```
+- Download Cluster CR sample from [IBM Doc](https://www.ibm.com/docs/en/scalecontainernative/5.2.3?topic=resources-cluster)<br>
+  - For Red Hat OpenShift Cluster CR <br>
+  ```bash
+  curl -fs https://raw.githubusercontent.com/IBM/ibm-spectrum-scale-container-native/v5.2.3.x/generated/scale/cr/cluster/cluster.yaml > cluster.yaml || echo "Failed to download Cluster sample CR"
+  ```
+  - Configure and apply cluster <br>
+  `oc apply -f cluster.yaml` <br>
+  -  Verify that the Operator has created by checking the pods <br>
+  `oc get pod -n ibm-spectrum-scale` <br>
+    - A sample output is shown: <br>
+    ```bash 
+    NAME                               READY   STATUS    RESTARTS   AGE 
+    ibm-spectrum-scale-gui-0           4/4     Running   0          5m45s 
+    ibm-spectrum-scale-gui-1           4/4     Running   0          2m9s 
+    ibm-spectrum-scale-pmcollector-0   2/2     Running   0          5m15s 
+    ibm-spectrum-scale-pmcollector-1   2/2     Running   0          4m11s 
+    worker0                            2/2     Running   0          5m43s 
+    worker1                            2/2     Running   0          5m43s 
+    worker3                            2/2     Running   0          5m45s 
+    ```
+- Create RemoteCluster <br>
+  - Create secret for storage cluster GUI users <br>
+  ```bash
+  oc create secret generic cnsa-remote-mount-storage-cluster-1 --from-literal=username='cnsa_storage_gui_user' \
+  --from-literal=password='cnsa_storage_gui_password' -n ibm-spectrum-scale
+  ```
+  - Label the secret <br>
+  ```bash
+  oc label secret cnsa-remote-mount-storage-cluster-1 -n ibm-spectrum-scale product=ibm-spectrum-scale
+  ```
+  - Create Configmap follow [IBM Docs](https://www.ibm.com/docs/en/scalecontainernative/5.2.3?topic=remotecluster-configuring-certificate-authority-ca-certificates) <br>
+  > If CSI requested, please create configmap on namespaces `ibm-spectrum-scale-csi` too <br>
