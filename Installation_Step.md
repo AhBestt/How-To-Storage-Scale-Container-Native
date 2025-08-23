@@ -74,65 +74,95 @@ ___
         operator: Exists
   ```
 - Verify Ingress Pods <br>
-  `oc get pod -n openshift-ingress -o wide` <br>
-  `oc get co | grep ingress` # should show True <br>
+  ```bash
+  oc get pod -n openshift-ingress -o wide
+  oc get co | grep ingress
+  ```
+  > Expected result: Should show True 
 - Create Infra MachineConfigPool <br>
   -  Create the `infra_mcp.yaml` file [infra_mcp.yaml](https://github.com/AhBestt/How-To-Storage-Scale-Container-Native/blob/main/infra_yaml/infra_mcp.yaml) <br>
   -  Apply the MCP <br>
-  `oc apply -f infra_mcp.yaml` <br>
+    ```bash
+    oc apply -f infra_mcp.yaml
+    ```
   -  Verify MCP status <br>
-  `oc get mc` # Should show render-infra
-  `oc get mcp` # Should show infra UP
+      ```bash
+      oc get mc 
+      oc get mcp
+      ```
+      > Expected result: Render-infra is shown from mc and Infra is shown from mcp 
 ___
 6. Download operator on openshift-console from OperatorHub <br>
 - To show OpenShift Console run: <br>
-   `oc whoami --show-console` <br>
+  ```bash
+  oc whoami --show-console
+  ```
 - Download Kubernetes NMState Operator and create NMState as default <br>
 - Setting IP as needed for Worker Node by [bond2.yaml](https://github.com/AhBestt/How-To-Storage-Scale-Container-Native/blob/main/infra_yaml/bond2.yaml) and [vlan.yaml](https://github.com/AhBestt/How-To-Storage-Scale-Container-Native/tree/main/infra_yaml)<br>
 - After configuration run the yaml file <br>
-   `oc apply -f bond2.yaml` <br>
-   `oc apply -f vlan.yaml` <br>
+  ```bash
+  oc apply -f bond2.yaml
+  oc apply -f vlan.yaml
+  ```
 ___
 7. Install Storage Scale Container Native <br>
--  Unlabel worker on Infra Node <br>
-    `oc label node/<FQDN_Infra_Node1_Name> node-role.kubernetes.io/worker-` <br>
-    `oc label node/<FQDN_Infra_Node2_Name> node-role.kubernetes.io/worker-` <br>
+- Unlabel worker on Infra Node <br>
+  ```bash
+  oc label node/<FQDN_Infra_Node1_Name> node-role.kubernetes.io/worker-
+  oc label node/<FQDN_Infra_Node2_Name> node-role.kubernetes.io/worker-
+  ```
 - Download the Worker Node Configuration YAML from [IBM Docs](https://www.ibm.com/docs/en/scalecontainernative/5.2.3?topic=premise-worker-node-configuration) matching the deployed version (e.g., 5.2.3) and the machine architecture (e.g., x86_64) <br>
-  -  Apply yaml file <br>
-       `oc apply -f mco_x86_64.yaml` <br>
+  - Apply yaml file <br>
+    ```bash
+    oc apply -f mco_x86_64.yaml
+    ```
   - Check Status for mcp and wait until the update completes <br>
-       `oc get mcp` <br>
+    ```bash
+    oc get mcp
+    ```
 - Verify Worker Node and Label <br>
   - Verify Worker Node (Ensure the worker label is applied only to Worker Nodes) <br>
-  `oc get node -l node-role.kubernetes.io/worker` <br>
+    ```bash
+    oc get node -l node-role.kubernetes.io/worker
+    ```
   - label Worker Node <br>
-  `oc label nodes -l node-role.kubernetes.io/worker= scale.spectrum.ibm.com/daemon-selector=` <br>
+    ```bash
+    oc label nodes -l node-role.kubernetes.io/worker= scale.spectrum.ibm.com/daemon-selector=
+    ```
 - Validate kernel package and secure boot <br>
   - Validate kernel package is installed <br>
-  `oc get nodes -lscale.spectrum.ibm.com/daemon-selector= -ojsonpath="{range .items[*]}{.metadata.name}{'\n'}" | xargs -I{} oc debug node/{} -T -- chroot /host sh -c "rpm -q kernel-devel"` <br>
+    ```bash
+    oc get nodes -lscale.spectrum.ibm.com/daemon-selector= -ojsonpath="{range .items[*]}{.metadata.name}{'\n'}" | xargs -I{} oc debug node/{} -T -- chroot /host sh -c "rpm -q kernel-devel"
+    ```
   - Validate secure boot is disabled <br>
-  `oc get nodes -lscale.spectrum.ibm.com/daemon-selector= -ojsonpath="{range .items[*]}{.metadata.name}{'\n'}" | xargs -I{} oc debug node/{} -T -- chroot /host sh -c "mokutil --sb-state"` <br>
+    ```bash
+    oc get nodes -lscale.spectrum.ibm.com/daemon-selector= -ojsonpath="{range .items[*]}{.metadata.name}{'\n'}" | xargs -I{} oc debug node/{} -T -- chroot /host sh -c "mokutil --sb-state"
+    ```
 - Install the operator into the target environment <br>
-   `oc apply -f https://raw.githubusercontent.com/IBM/ibm-spectrum-scale-container-native/v5.2.3.x/generated/scale/install.yaml` <br>
+  ```bash
+  oc apply -f https://raw.githubusercontent.com/IBM/ibm-spectrum-scale-container-native/v5.2.3.x/generated/scale/install.yaml
+  ```
   - Validate Namespace <br>
-  `oc get namespaces | grep ibm-spectrum-scale` <br>
-    
-    >Expected result: The following namespaces appear and in Ready status <br>
-    > ibm-spectrum-scale <br>
-    > ibm-spectrum-scale-csi <br>
-    > ibm-spectrum-scale-dns <br>
-    > ibm-spectrum-scale-operator <br>
+  ```bash
+  oc get namespaces | grep ibm-spectrum-scale
+  ```
+  >Expected result: The following namespaces appear and in Ready status <br>
+  > ibm-spectrum-scale <br>
+  > ibm-spectrum-scale-csi <br>
+  > ibm-spectrum-scale-dns <br>
+  > ibm-spectrum-scale-operator <br>
   
   - Validate pod <br>
-    `oc get pods -n ibm-spectrum-scale-operator` <br>
-    
-    >Expected result: The following pod appear and in Ready status <br>
-    >ibm-spectrum-scale-controller-manager-<generated_number> <br>
-    
-    `oc get pods -n ibm-spectrum-scale-csi` <br>
-
-    > Expected result: The following pod appear and in Ready status <br>
-    > ibm-spectrum-scale-csi-operator-<generated_number> <br>
+  ```bash
+  oc get pods -n ibm-spectrum-scale-operator
+  ```
+  >Expected result: The following pod appear and in Ready status <br>
+  >ibm-spectrum-scale-controller-manager-<generated_number> <br>
+  ```bash  
+  oc get pods -n ibm-spectrum-scale-csi
+  ```
+  > Expected result: The following pod appear and in Ready status <br>
+  > ibm-spectrum-scale-csi-operator-<generated_number> <br>
 - Export Key and Create name space pull secret <br>
   -  Export Key Entitlement <br>
     ```bash
@@ -157,9 +187,13 @@ ___
   curl -fs https://raw.githubusercontent.com/IBM/ibm-spectrum-scale-container-native/v5.2.3.x/generated/scale/cr/cluster/cluster.yaml > cluster.yaml || echo "Failed to download Cluster sample CR"
   ```
   - Configure and apply cluster <br>
-  `oc apply -f cluster.yaml` <br>
+  ```bash
+  oc apply -f cluster.yaml
+  ```
   -  Verify that the Operator has created by checking the pods <br>
-  `oc get pod -n ibm-spectrum-scale` <br>
+  ```bash
+  oc get pod -n ibm-spectrum-scale
+  ```
     - A sample output is shown: <br>
     ```bash 
     NAME                               READY   STATUS    RESTARTS   AGE 
