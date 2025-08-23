@@ -86,11 +86,11 @@ ___
     oc apply -f infra_mcp.yaml
     ```
   -  Verify MCP status <br>
-      ```bash
-      oc get mc 
-      oc get mcp
-      ```
-      > Expected result: Render-infra is shown from mc and Infra is shown from mcp 
+    ```bash
+    oc get mc 
+    oc get mcp
+    ```
+  > Expected result: Render-infra is shown from mc and Infra is shown from mcp 
 ___
 6. Download operator on openshift-console from OperatorHub <br>
 - To show OpenShift Console run: <br>
