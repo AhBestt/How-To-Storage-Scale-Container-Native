@@ -5,18 +5,26 @@ ___
 ___
 3. Create users on Bastion Host <br>
   -  Create user <br>
-`useradd -m -s /bin/bash -G wheel <username>` <br>
+  ```bash
+  useradd -m -s /bin/bash -G wheel <username>`
+  ``` 
   - Create password for that user <br>
-`passwd <username>`
+  ```bash
+  passwd <username>
+  ```
   - Grant sudo privileges to that user <br>
-`echo "core ALL=(ALL) ALL" >> /etc/sudoers`
+  ```bash
+  echo "core ALL=(ALL) ALL" >> /etc/sudoers
+  ```
 ___
 4. Download kubeconfig from the openshift console and configure kubeconfig <br>
-`sudo chown core:core kubeconfig`<br>
-`mkdir .kube` <br>
-`mv kubeconfig .kube/` <br>
-`vi .bash_profile`
-- add following <br>
+  ```bash
+  sudo chown core:core kubeconfig
+  mkdir .kube
+  mv kubeconfig .kube/
+  vi .bash_profile
+  ```
+- Add following 
 ```bash
 export KUBECONFIG=$HOME/.kube/kubeconfig
 ```
@@ -24,25 +32,35 @@ export KUBECONFIG=$HOME/.kube/kubeconfig
 ___
 5. Configure Infra Nodes and Ingress Controller
 - Verify Ingress <br>
-`oc get pod -A -o wide | grep ingress` <br>
+  ```bash
+  oc get pod -A -o wide | grep ingress
+  ```
 - Labels Infra node <br>
-`oc label node <FQDN_Infra_Node1_name> node-role.kubernetes.io/infra=true` <br>
-`oc label node <FQDN_Infra_Node2_name> node-role.kubernetes.io/infra=true` <br>
+  ```bash
+  oc label node <FQDN_Infra_Node1_name> node-role.kubernetes.io/infra=true
+  oc label node <FQDN_Infra_Node2_name> node-role.kubernetes.io/infra=true
+  ```
 - Check Node Taints <br>
-```bash
-oc get node
-oc describe node <FQDN_Infra_Node1_name> | grep -i taints
-oc describe node <FQDN_Infra_Node2_name> | grep -i taints
-oc describe node <FQDN_Master_Node1_name> | grep -i taints
-```
+  ```bash
+  oc get node
+  oc describe node <FQDN_Infra_Node1_name> | grep -i taints
+  oc describe node <FQDN_Infra_Node2_name> | grep -i taints
+  oc describe node <FQDN_Master_Node1_name> | grep -i taints
+  ```
 - Add Taints to Infra Nodes <br>
-`oc adm taint node <FQDN_Infra_Node1_name> node-role.kubernetes.io/infra:NoSchedule` <br>
-`oc adm taint node <FQDN_Infra_Node2_name> node-role.kubernetes.io/infra:NoSchedule` <br>
+  ```bash
+  oc adm taint node <FQDN_Infra_Node1_name> node-role.kubernetes.io/infra:NoSchedule
+  oc adm taint node <FQDN_Infra_Node2_name> node-role.kubernetes.io/infra:NoSchedule
+  ```
 - Verify Taints <br>
-`oc describe node <FQDN_Infra_Node1_name> | grep -i taints` <br>
-`oc describe node <FQDN_Infra_Node2_name> | grep -i taints` <br>
-- Edit Ingress Controller
-`oc edit ingresscontroller default -n openshift-ingress-operator`<br>
+  ```bash
+  oc describe node <FQDN_Infra_Node1_name> | grep -i taints
+  oc describe node <FQDN_Infra_Node2_name> | grep -i taints
+  ```
+- Edit Ingress Controller <br>
+  ```bash
+  oc edit ingresscontroller default -n openshift-ingress-operator
+  ```
   - Add the following configuration under `spec: ` <br>
   ```bash
   spec:
