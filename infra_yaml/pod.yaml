@@ -1,18 +1,28 @@
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: ibm-spectrum-scale-test-pod
+  name: test-pod
 spec:
-  containers:
-    - name: ibm-spectrum-scale-test-pod
-      #image: alpine:latest
-      image: registry.access.redhat.com/ubi8/ubi-minimal:latest
-      command: [ "/bin/sh", "-c", "--" ]
-      args: [ "while true; do echo $(hostname) $(date +%Y%m%d-%H:%M:%S) | tee -a /data/stream1.out ; sleep 5 ; done;" ]
-      volumeMounts:
-        - name: vol1
-          mountPath: "/data"
-  volumes:
-    - name: vol1
-      persistentVolumeClaim:
-        claimName: ibm-spectrum-scale-pvc
+  replicas: 2
+  selector:
+    matchLabels:
+      app: test-pod
+  template:
+    metadata:
+      labels:
+        app: test-pod
+    spec:
+      nodeSeletor:
+        node-role.kubernetes.io/worker: ""
+      containers:
+      - name: busybox
+        image: busybox:1.36
+        command: ["/bin/sh"]
+        args: ["-c", "sleep 3600"]
+        volumeMounts:
+        - name: data
+          mountPath: /mnt/data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: test-pvc
